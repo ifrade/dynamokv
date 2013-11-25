@@ -1,8 +1,3 @@
-dynamokv
-========
-
-Dynamo Key-Value
-=======
 DynamoKV - Dynamo as simple Key-Value
 =====================================
 
@@ -43,6 +38,7 @@ For example:
     $ mycode.js // your code using DynamoKV, will now call fake_dynamo
 
 Now:
+
     $ unset FAKE_DYNAMO_ENDPOINT
     $ mycode.js // this code will connect to Amazon Dynamo
 
