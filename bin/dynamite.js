@@ -120,7 +120,7 @@ DynamoKV.createDynamoKV(argv.p, tableDefinitions, function (err, dynamo) {
         dynamoKV.createTables(function (err) {
             if (err) {
                 console.log(err);
-                process.exit(-1);
+                process.exit(argv.i ? 0 : -1);
             }
 
             console.log("Ok");
