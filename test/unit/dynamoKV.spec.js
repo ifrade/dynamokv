@@ -114,6 +114,25 @@ describe("DynamoKV", function () {
             });
         });
 
+        it('Is element in list (positive)', function (done) {
+            dynamokv.isInListOnKey("TableA", "listThing", "string1", null, function (err, itIs) {
+                should.not.exist(err);
+                should.exist(itIs);
+                itIs.should.be.ok;
+                done();
+            });
+        });
+
+        it('Is element in list (negative)', function (done) {
+            dynamokv.isInListOnKey("TableA", "listThing", "stringX", null, function (err, itIs) {
+                should.not.exist(err);
+                should.exist(itIs);
+                itIs.should.not.be.ok;
+                done();
+            });
+        });
+
+
         it('Remove unexisting element', function (done) {
             dynamokv.removeFromListOnKey("TableA", "listThing", "string3", null, function (err) {
                 // Should 'Element not in list' be reported as error?
@@ -154,6 +173,15 @@ describe("DynamoKV", function () {
             });
         });
 
+        it('Is element in non existing list', function (done) {
+            dynamokv.isInListOnKey("TableA", "listThing", "stringX", null, function (err, itIs) {
+                should.not.exist(err);
+                should.exist(itIs);
+                itIs.should.not.be.ok;
+                done();
+            });
+        });
+
     });
 
 
@@ -186,6 +214,24 @@ describe("DynamoKV", function () {
         var comparator = function (itemInList, value) {
             return itemInList.a === value;
         };
+
+        it('Is element in list (positive)', function (done) {
+            dynamokv.isInListOnKey("TableA", "listThing", "string1", comparator, function (err, itIs) {
+                should.not.exist(err);
+                should.exist(itIs);
+                itIs.should.be.ok;
+                done();
+            });
+        });
+
+        it('Is element in list (negative)', function (done) {
+            dynamokv.isInListOnKey("TableA", "listThing", "stringX", comparator, function (err, itIs) {
+                should.not.exist(err);
+                should.exist(itIs);
+                itIs.should.not.be.ok;
+                done();
+            });
+        });
 
         it('Remove unexisting element', function (done) {
             dynamokv.removeFromListOnKey("TableA", "listThing", "string3", comparator, function (err) {
@@ -224,6 +270,15 @@ describe("DynamoKV", function () {
             dynamokv.removeFromListOnKey("TableA", "listThing", "string3", comparator, function (err) {
                 should.exist(err);
                 err.should.have.property("notFound");
+                done();
+            });
+        });
+
+        it('Is element in non existing list', function (done) {
+            dynamokv.isInListOnKey("TableA", "listThing", "stringX", comparator, function (err, itIs) {
+                should.not.exist(err);
+                should.exist(itIs);
+                itIs.should.not.be.ok;
                 done();
             });
         });
