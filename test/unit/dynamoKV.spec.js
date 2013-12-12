@@ -37,63 +37,94 @@ describe("DynamoKV", function () {
         });
     });
 
-
-    it('Insert key', function (done) {
-        dynamokv.putOnTable("TableA", "keyA1", { a: 1, b: 2}, false, function (err) {
-            should.not.exist(err);
-            dynamokv.getFromTable("TableA", "keyA1", function (err, data) {
+    var basicOperationTests = function () {
+        it('Insert key', function (done) {
+            var that = this;
+            dynamokv.putOnTable(this.tableName, this.goodKey, { a: 1, b: 2}, false, function (err) {
                 should.not.exist(err);
-                should.exist(data);
-                data.should.have.property("a").and.equal(1);
-                data.should.have.property("b").and.equal(2);
+                dynamokv.getFromTable(that.tableName, that.goodKey, function (err, data) {
+                    should.not.exist(err);
+                    should.exist(data);
+                    data.should.have.property("a").and.equal(1);
+                    data.should.have.property("b").and.equal(2);
+                    done();
+                });
+            });
+        });
+
+        it('Update key', function (done) {
+            var that = this;
+            dynamokv.putOnTable(this.tableName, this.goodKey, { a: 2, b: 3}, true, function (err) {
+                should.not.exist(err);
+                dynamokv.getFromTable(that.tableName, that.goodKey, function (err, data) {
+                    should.not.exist(err);
+                    should.exist(data);
+                    data.should.have.property("a").and.equal(2);
+                    data.should.have.property("b").and.equal(3);
+                    done();
+                });
+            });
+        });
+
+        it('Failed insert (key exists and no overwrite)', function (done) {
+            dynamokv.putOnTable(this.tableName, this.goodKey, { a: "fail"}, false, function (err) {
+                should.exist(err);
                 done();
             });
         });
-    });
 
-    it('Update key', function (done) {
-        dynamokv.putOnTable("TableA", "keyA1", { a: 2, b: 3}, true, function (err) {
-            should.not.exist(err);
-            dynamokv.getFromTable("TableA", "keyA1", function (err, data) {
+
+        it('Delete key', function (done) {
+            dynamokv.deleteFromTable(this.tableName, this.goodKey, function (err) {
                 should.not.exist(err);
-                should.exist(data);
-                data.should.have.property("a").and.equal(2);
-                data.should.have.property("b").and.equal(3);
                 done();
             });
         });
-    });
 
-    it('Failed insert (key exists and no overwrite)', function (done) {
-        dynamokv.putOnTable("TableA", "keyA1", { a: "fail"}, false, function (err) {
-            should.exist(err);
-            done();
+        it('Delete unexisting key', function (done) {
+            dynamokv.deleteFromTable(this.tableName, this.unexistingKey, function (err) {
+                // It is not reported
+                should.not.exist(err);
+                done();
+            });
         });
-    });
+    };
 
-
-    it('Delete key', function (done) {
-        dynamokv.deleteFromTable("TableA", "keyA1", function (err) {
-            should.not.exist(err);
-            done();
+    describe('Basic operations (string key, backwards compatibility)', function () {
+        before(function () {
+            this.tableName = "TableA";
+            this.goodKey = "keyA1";
+            this.unexistingKey = "keyAX";
         });
+        basicOperationTests();
     });
 
-    it('Delete unexisting key', function (done) {
-        dynamokv.deleteFromTable("TableA", "keyX1", function (err) {
-            // It is not reported
-            should.not.exist(err);
-            done();
+    describe('Basic operations (only hash key, as obj)', function () {
+        before(function () {
+            this.tableName = "TableA";
+            this.goodKey = { hash: "keyA1" };
+            this.unexistingKey = { hash: "keyAX" };
         });
+        basicOperationTests();
+    });
+
+    describe('Basic operations (hash and range key)', function () {
+        before(function () {
+            this.tableName = "TableB";
+            this.goodKey = { hash: "keyC1", range: "userC1" };
+            this.unexistingKey = {hash: "keyCX", range: "whatever"};
+        });
+        basicOperationTests();
     });
 
 
 
-    describe('List values (default comparator)', function () {
+    var listOperationTests = function () {
         it('Insert first element', function (done) {
-            dynamokv.appendToListOnKey("TableA", "listThing", "string1", function (err) {
+            var that = this;
+            dynamokv.appendToListOnKey(this.tableName, "listThing", this.content1, function (err) {
                 should.not.exist(err);
-                dynamokv.getFromTable("TableA", "listThing", function (err, storedList) {
+                dynamokv.getFromTable(that.tableName, "listThing", function (err, storedList) {
                     should.not.exist(err);
                     should.exist(storedList);
                     storedList.should.have.length(1);
@@ -103,9 +134,10 @@ describe("DynamoKV", function () {
         });
 
         it('Insert second element', function (done) {
-            dynamokv.appendToListOnKey("TableA", "listThing", "string2", function (err) {
+            var that = this;
+            dynamokv.appendToListOnKey(this.tableName, "listThing", this.content2, function (err) {
                 should.not.exist(err);
-                dynamokv.getFromTable("TableA", "listThing", function (err, storedList) {
+                dynamokv.getFromTable(that.tableName, "listThing", function (err, storedList) {
                     should.not.exist(err);
                     should.exist(storedList);
                     storedList.should.have.length(2);
@@ -115,7 +147,7 @@ describe("DynamoKV", function () {
         });
 
         it('Is element in list (positive)', function (done) {
-            dynamokv.isInListOnKey("TableA", "listThing", "string1", null, function (err, itIs) {
+            dynamokv.isInListOnKey(this.tableName, "listThing", this.key1, this.comparator, function (err, itIs) {
                 should.not.exist(err);
                 should.exist(itIs);
                 itIs.should.be.ok;
@@ -124,7 +156,7 @@ describe("DynamoKV", function () {
         });
 
         it('Is element in list (negative)', function (done) {
-            dynamokv.isInListOnKey("TableA", "listThing", "stringX", null, function (err, itIs) {
+            dynamokv.isInListOnKey(this.tableName, "listThing", this.keyNotSet, this.comparator, function (err, itIs) {
                 should.not.exist(err);
                 should.exist(itIs);
                 itIs.should.not.be.ok;
@@ -134,7 +166,7 @@ describe("DynamoKV", function () {
 
 
         it('Remove unexisting element', function (done) {
-            dynamokv.removeFromListOnKey("TableA", "listThing", "string3", null, function (err) {
+            dynamokv.removeFromListOnKey(this.tableName, "listThing", this.keyNotSet, this.comparator, function (err) {
                 // Should 'Element not in list' be reported as error?
                 should.not.exist(err);
                 done();
@@ -142,22 +174,24 @@ describe("DynamoKV", function () {
         });
 
         it('Remove first element', function (done) {
-            dynamokv.removeFromListOnKey("TableA", "listThing", "string1", null, function (err) {
+            var that = this;
+            dynamokv.removeFromListOnKey(this.tableName, "listThing", this.key1, this.comparator, function (err) {
                 should.not.exist(err);
-                dynamokv.getFromTable("TableA", "listThing", function (err, storedList) {
+                dynamokv.getFromTable(that.tableName, "listThing", function (err, storedList) {
                     should.not.exist(err);
                     should.exist(storedList);
                     storedList.should.have.length(1);
-                    storedList.should.contain("string2");
+                    //storedList.should.contain("string2");
                     done();
                 });
             });
         });
 
         it('Remove first element (empty list)', function (done) {
-            dynamokv.removeFromListOnKey("TableA", "listThing", "string2", null, function (err) {
+            var that = this;
+            dynamokv.removeFromListOnKey(this.tableName, "listThing", this.key2, this.comparator, function (err) {
                 should.not.exist(err);
-                dynamokv.getFromTable("TableA", "listThing", function (err, storedList) {
+                dynamokv.getFromTable(that.tableName, "listThing", function (err, storedList) {
                     should.exist(err);
                     err.should.have.property("notFound");
                     done();
@@ -166,7 +200,7 @@ describe("DynamoKV", function () {
         });
 
         it('Remove from non-existing list', function (done) {
-            dynamokv.removeFromListOnKey("TableA", "listThing", "string3", null, function (err) {
+            dynamokv.removeFromListOnKey(this.tableName, "listThing", this.key1, this.comparator, function (err) {
                 should.exist(err);
                 err.should.have.property("notFound");
                 done();
@@ -174,118 +208,54 @@ describe("DynamoKV", function () {
         });
 
         it('Is element in non existing list', function (done) {
-            dynamokv.isInListOnKey("TableA", "listThing", "stringX", null, function (err, itIs) {
+            dynamokv.isInListOnKey(this.tableName, "listThing", this.key1, this.comparator, function (err, itIs) {
                 should.not.exist(err);
                 should.exist(itIs);
                 itIs.should.not.be.ok;
                 done();
             });
         });
+    };
 
+    describe('List values (default comparator)', function () {
+        before(function () {
+            this.tableName = "TableA";
+
+            this.content1 = "string1";
+            this.key1 = "string1";
+
+            this.content2 = "string2";
+            this.key2 = "string2";
+
+            this.contentNotSet = "stringX";
+            this.comparator = null;
+        });
+
+        listOperationTests();
     });
-
-
 
     describe('List values (custom comparator)', function () {
-        it('Insert first element', function (done) {
-            dynamokv.appendToListOnKey("TableA", "listThing", {a: "string1"}, function (err) {
-                should.not.exist(err);
-                dynamokv.getFromTable("TableA", "listThing", function (err, storedList) {
-                    should.not.exist(err);
-                    should.exist(storedList);
-                    storedList.should.have.length(1);
-                    done();
-                });
-            });
+        before(function () {
+            this.tableName = "TableA";
+
+            // Real content in the list
+            this.content1 = { a: "string1"};
+            // Key that we use to search in the list
+            this.key1 = "string1";
+
+            this.content2 = { a: "string2"};
+            this.key2 = "string2";
+
+            this.contentNotSet = { a: "stringX"};
+            this.keyNotSet = "stringX";
+
+            this.comparator = function (itemInList, value) {
+                return itemInList.a === value;
+            };
         });
 
-        it('Insert second element', function (done) {
-            dynamokv.appendToListOnKey("TableA", "listThing", {a: "string2"}, function (err) {
-                should.not.exist(err);
-                dynamokv.getFromTable("TableA", "listThing", function (err, storedList) {
-                    should.not.exist(err);
-                    should.exist(storedList);
-                    storedList.should.have.length(2);
-                    done();
-                });
-            });
-        });
-
-        var comparator = function (itemInList, value) {
-            return itemInList.a === value;
-        };
-
-        it('Is element in list (positive)', function (done) {
-            dynamokv.isInListOnKey("TableA", "listThing", "string1", comparator, function (err, itIs) {
-                should.not.exist(err);
-                should.exist(itIs);
-                itIs.should.be.ok;
-                done();
-            });
-        });
-
-        it('Is element in list (negative)', function (done) {
-            dynamokv.isInListOnKey("TableA", "listThing", "stringX", comparator, function (err, itIs) {
-                should.not.exist(err);
-                should.exist(itIs);
-                itIs.should.not.be.ok;
-                done();
-            });
-        });
-
-        it('Remove unexisting element', function (done) {
-            dynamokv.removeFromListOnKey("TableA", "listThing", "string3", comparator, function (err) {
-                // Element not in list should be an error?
-                should.not.exist(err);
-                done();
-            });
-        });
-
-        it('Remove first element', function (done) {
-            dynamokv.removeFromListOnKey("TableA", "listThing", "string1", comparator, function (err) {
-                should.not.exist(err);
-                dynamokv.getFromTable("TableA", "listThing", function (err, storedList) {
-                    should.not.exist(err);
-                    should.exist(storedList);
-                    storedList.should.have.length(1);
-                    storedList[0].should.have.property("a");
-                    storedList[0]["a"].should.equal("string2");
-                    done();
-                });
-            });
-        });
-
-        it('Remove first element (empty list)', function (done) {
-            dynamokv.removeFromListOnKey("TableA", "listThing", "string2", comparator, function (err) {
-                should.not.exist(err);
-                dynamokv.getFromTable("TableA", "listThing", function (err, storedList) {
-                    should.exist(err);
-                    err.should.have.property("notFound");
-                    done();
-                });
-            });
-        });
-
-        it('Remove from non-existing list', function (done) {
-            dynamokv.removeFromListOnKey("TableA", "listThing", "string3", comparator, function (err) {
-                should.exist(err);
-                err.should.have.property("notFound");
-                done();
-            });
-        });
-
-        it('Is element in non existing list', function (done) {
-            dynamokv.isInListOnKey("TableA", "listThing", "stringX", comparator, function (err, itIs) {
-                should.not.exist(err);
-                should.exist(itIs);
-                itIs.should.not.be.ok;
-                done();
-            });
-        });
-
+        listOperationTests();
     });
-
-
 
     after(function (done) {
         dynamo.stop(done);
