@@ -19,11 +19,15 @@
         "TableName" : null,
         "AttributeDefinitions": [
             { "AttributeName": "id",
+              "AttributeType": "S" },
+            { "AttributeName": "range",
               "AttributeType": "S" }
         ],
         "KeySchema": [
             { "AttributeName": "id",
-              "KeyType" : "HASH" }
+              "KeyType" : "HASH" },
+            { "AttributeName": "range",
+              "KeyType" : "RANGE" }
         ],
         "ProvisionedThroughput": {
             "ReadCapacityUnits" : 10,

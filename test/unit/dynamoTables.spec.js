@@ -10,16 +10,12 @@ var testTables = {
     "A" : {
         "TableName" : null,
         "AttributeDefinitions": [
-            { "AttributeName": "id",
-              "AttributeType": "S" },
-            { "AttributeName": "itemType",
-              "AttributeType": "S" }
+            { "AttributeName" : "id",
+              "AttributeType" : "S" }
         ],
         "KeySchema": [
             { "AttributeName": "id",
-              "KeyType" : "HASH" },
-            { "AttributeName": "itemType",
-              "KeyType" : "RANGE" }
+              "KeyType" : "HASH" }
         ],
         "ProvisionedThroughput": {
             "ReadCapacityUnits" : 10,
@@ -30,12 +26,16 @@ var testTables = {
     "B" : {
         "TableName" : null,
         "AttributeDefinitions": [
-            { "AttributeName" : "id",
-              "AttributeType" : "S" }
+            { "AttributeName": "id",
+              "AttributeType": "S" },
+            { "AttributeName": "itemType",
+              "AttributeType": "S" }
         ],
         "KeySchema": [
             { "AttributeName": "id",
-              "KeyType" : "HASH" }
+              "KeyType" : "HASH" },
+            { "AttributeName": "itemType",
+              "KeyType" : "RANGE" }
         ],
         "ProvisionedThroughput": {
             "ReadCapacityUnits" : 10,
@@ -76,26 +76,61 @@ describe("DynamoTables", function () {
         (function () { var shortName = tables.shortTableName("ha-ha-ha"); }).should.throwError();
     });
 
+    describe("Only hash key", function () {
+        it("Get key fields for a table", function () {
+            var keyField = tables.getKeyFieldForTable("A");
+            should.exist(keyField);
+            keyField.should.have.property("hashField");
+            keyField.hashField.should.equal("id");
+            keyField.should.not.have.property("keyField");
+        });
 
-    it("Get key fields for a table", function () {
-        var keyField = tables.getKeyFieldForTable("A");
-        should.exist(keyField);
-        keyField.should.equal("id");
+        it("Get key fields for unknown table", function () {
+            (function () { var keyField = tables.getKeyFieldForTable("X"); }).should.throwError();
+        });
+
+        it("Get key from dynamo item (internal)", function () {
+            var dynamoObj = {
+                "id": { "S": "1" },
+                "a": { "S": "bla" },
+                "b": { "S": "ble"}
+            };
+            var keyInObj = tables.getKeyForItem(dynamoObj, "prefix-A-123");
+            should.exist(keyInObj);
+            keyInObj.should.have.property("hash");
+            keyInObj.hash.S.should.equal("1");
+            keyInObj.should.not.have.property("range");
+        });
     });
 
-    it("Get key fields for unknown table", function () {
-        (function () { var keyField = tables.getKeyFieldForTable("X"); }).should.throwError();
-    });
+    describe("Hash and range key", function () {
+        it("Get key fields for a table", function () {
+            var keyField = tables.getKeyFieldForTable("B");
+            should.exist(keyField);
+            keyField.should.have.property("hashField");
+            keyField.hashField.should.equal("id");
+            keyField.should.have.property("rangeField");
+            keyField.rangeField.should.equal("itemType");
+        });
 
-    it("Get key from dynamo item (internal)", function () {
-        var dynamoObj = {
-            "id": { "S": "1" },
-            "a": { "S": "bla" },
-            "b": { "S": "ble"}
-        };
-        var keyInObj = tables.getKeyForItem(dynamoObj, "prefix-A-123");
-        should.exist(keyInObj);
-        keyInObj.should.equal("1");
+        it("Get key fields for unknown table", function () {
+            (function () { var keyField = tables.getKeyFieldForTable("X"); }).should.throwError();
+        });
+
+        it("Get key from dynamo item (internal)", function () {
+            var dynamoObj = {
+                "id": { "S": "1" },
+                "itemType" : { "S": "2" },
+                "a": { "S": "bla" },
+                "b": { "S": "ble"}
+            };
+            var keyInObj = tables.getKeyForItem(dynamoObj, "prefix-B-123");
+            should.exist(keyInObj);
+            keyInObj.should.have.property("hash");
+            keyInObj.hash.S.should.equal("1");
+            keyInObj.should.have.property("range");
+            keyInObj.range.S.should.equal("2");
+        });
     });
 
 });
