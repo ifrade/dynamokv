@@ -5,6 +5,7 @@
 
 var should = require('should');
 var fs = require('fs');
+var async = require('async');
 
 var DynamoHelper = require('../../lib/DynamoHelper.js');
 var createDynamoKV = require('../../lib/DynamoKV.js').createDynamoKV;
@@ -115,6 +116,47 @@ describe("DynamoKV", function () {
             this.unexistingKey = {hash: "keyCX", range: "whatever"};
         });
         basicOperationTests();
+    });
+
+    describe('Get all from hash', function () {
+
+        before(function (done) {
+            var count = 0;
+            async.whilst(
+                function () { return count < 5; },
+                function (cb) {
+                    var key = {
+                        hash: "testHash",
+                        range: "testRange" + (count++)
+                    };
+                    dynamokv.putOnTable("TableB", key, {}, false, cb);
+                }, function (err) {
+                    done(err);
+                });
+        });
+
+        it("Multiple values", function (done) {
+            dynamokv.listOnKey("TableB", "testHash", function (err, rangeValues) {
+                should.not.exist(err);
+                should.exist(rangeValues);
+                rangeValues.should.have.length(5);
+                // { range: x, content: Y}
+                //rangeValues.should.contain("testRange1");
+                //rangeValues.should.contain("testRange3");
+                //rangeValues.should.contain("testRange5");
+                done();
+            });
+        });
+
+        it("No values", function (done) {
+            dynamokv.listOnKey("TableB", "randomkey", function (err, rangeValues) {
+                should.not.exist(err);
+                should.exist(rangeValues);
+                rangeValues.should.have.length(0);
+                done();
+            });
+        });
+
     });
 
 
