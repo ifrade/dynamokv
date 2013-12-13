@@ -84,8 +84,7 @@ describe("DynamoKV", function () {
 
         it('Delete unexisting key', function (done) {
             dynamokv.deleteFromTable(this.tableName, this.unexistingKey, function (err) {
-                // It is not reported
-                should.not.exist(err);
+                should.exist(err);
                 done();
             });
         });
