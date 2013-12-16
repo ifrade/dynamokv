@@ -1,25 +1,21 @@
 {
-    "name": "dynamokv",
-    "version": "0.1.0",
-    "description": "Wrapper to use dynamo as a simple key-value",
-    "author": "Ivan Frade <ivan.frade@gmail.com>",
-
-    "dependencies": {
-        "optimist" : "",
-        "async"    : "",
-        "aws-sdk"  : "",
-        "fake-dynamo-gem" : ""
-    },
-
-    "devDependencies" : {
-        "should"        : "",
-        "mocha"         : "",
-        "istanbul"      : ""
-    },
-
-    "main": "./lib/index.js",
-
-    "scripts": {
-        "test": "./node_modules/istanbul/lib/cli.js test $1 ./node_modules/mocha/bin/_mocha -- -R spec test/unit"
-    }
+  "name": "dynamokv",
+  "version": "0.2.0",
+  "description": "Wrapper to use dynamo as a simple key-value",
+  "author": "Ivan Frade <ivan.frade@gmail.com>",
+  "dependencies": {
+    "optimist": "",
+    "async": "",
+    "aws-sdk": "",
+    "fake-dynamo-gem": ""
+  },
+  "devDependencies": {
+    "should": "",
+    "mocha": "",
+    "istanbul": ""
+  },
+  "main": "./lib/index.js",
+  "scripts": {
+    "test": "./node_modules/istanbul/lib/cli.js test $1 ./node_modules/mocha/bin/_mocha -- -R spec test/unit"
+  }
 }
