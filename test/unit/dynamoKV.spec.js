@@ -76,8 +76,13 @@ describe("DynamoKV", function () {
 
 
         it('Delete key', function (done) {
-            dynamokv.deleteFromTable(this.tableName, this.goodKey, function (err) {
+            dynamokv.deleteFromTable(this.tableName, this.goodKey, function (err, data) {
                 should.not.exist(err);
+                should.exist(data);
+                data.should.have.property("a");
+                data.a.should.equal(2);
+                data.should.have.property("b");
+                data.b.should.equal(3);
                 done();
             });
         });
