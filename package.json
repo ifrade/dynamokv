@@ -1,6 +1,6 @@
 {
   "name": "dynamokv",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Wrapper to use dynamo as a simple key-value",
   "author": "Ivan Frade <ivan.frade@gmail.com>",
   "dependencies": {
