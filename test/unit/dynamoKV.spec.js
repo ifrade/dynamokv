@@ -303,6 +303,42 @@ describe("DynamoKV", function () {
         listOperationTests();
     });
 
+    var insertEmptyCheck = function () {
+        it('insert object, empty table, check object is not there', function (done) {
+            var that = this;
+            dynamokv.putOnTable(this.tableName, this.key, { content: "xxxxxx"}, true, function (err) {
+                should.not.exist(err);
+                dynamokv.emptyTables(function (err) {
+                    should.not.exist(err);
+                    dynamokv.getFromTable(that.tableName, that.key, function (err, data) {
+                        should.exist(err);
+                        err.should.have.property("notFound");
+                        done();
+                    });
+                });
+            });
+        });
+    };
+
+    describe('Empty tables (hash key)', function (done) {
+        before(function () {
+            this.tableName = "TableA";
+            this.key = { hash: "DeleteHashKey" };
+        });
+
+        insertEmptyCheck();
+    });
+
+    describe('Empty tables (hash/range key)', function (done) {
+        before(function () {
+            this.tableName = "TableB";
+            this.key = { hash: "DeleteHashKey", range: "DelteHashRange" };
+        });
+
+        insertEmptyCheck();
+    });
+
+
     after(function (done) {
         dynamo.stop(done);
     });
