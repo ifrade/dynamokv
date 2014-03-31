@@ -7,7 +7,7 @@
     "optimist": "",
     "async": "",
     "aws-sdk": "",
-    "fake-dynamo-gem": ""
+    "dynalite": ""
   },
   "devDependencies": {
     "should": "",
