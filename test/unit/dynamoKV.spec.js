@@ -1,5 +1,4 @@
 /* global describe, it, before, after */
-/* global afterEach, beforeEach */
 /* jshint node: true*/
 'use strict';
 
@@ -31,9 +30,10 @@ describe("DynamoKV", function () {
     it('listTables', function (done) {
         dynamokv.listTables(function (err, tables) {
             should.exist(tables);
-            tables.should.have.length(2);
+            tables.should.have.length(3);
             tables.should.contain(TABLE_PREFIX + "-" + "TableA");
             tables.should.contain(TABLE_PREFIX + "-" + "TableB");
+            tables.should.contain(TABLE_PREFIX + "-" + "TableC");
             done();
         });
     });
@@ -41,6 +41,7 @@ describe("DynamoKV", function () {
     var basicOperationTests = function () {
         it('Insert key', function (done) {
             var that = this;
+
             dynamokv.putOnTable(this.tableName, this.goodKey, { a: 1, b: 2}, false, function (err) {
                 should.not.exist(err);
                 dynamokv.getFromTable(that.tableName, that.goodKey, function (err, data) {
@@ -303,7 +304,7 @@ describe("DynamoKV", function () {
         listOperationTests();
     });
 
-    var insertEmptyCheck = function () {
+    var insertEmptyCheck = function (done) {
         it('insert object, empty table, check object is not there', function (done) {
             var that = this;
             dynamokv.putOnTable(this.tableName, this.key, { content: "xxxxxx"}, true, function (err) {
@@ -326,7 +327,7 @@ describe("DynamoKV", function () {
             this.key = { hash: "DeleteHashKey" };
         });
 
-        insertEmptyCheck();
+        insertEmptyCheck(done);
     });
 
     describe('Empty tables (hash/range key)', function (done) {
@@ -335,7 +336,45 @@ describe("DynamoKV", function () {
             this.key = { hash: "DeleteHashKey", range: "DelteHashRange" };
         });
 
-        insertEmptyCheck();
+        insertEmptyCheck(done);
+    });
+
+
+    describe('Using indexes', function () {
+        var obj = { prop1: "A", prop2: "B", prop3: "C", prop4: "D"};
+
+        it('Insert object', function (done) {
+            var key = { hash: obj.prop1, range: obj.prop2 };
+            dynamokv.putOnTable("TableC", key, obj, false, done);
+        });
+
+        it('Search by main key', function (done) {
+            var key = { hash: obj.prop1, range: obj.prop2 };
+            dynamokv.getFromTable("TableC", key, function (err, data) {
+                should.not.exist(err);
+                should.exist(data);
+                data.should.have.property("prop4");
+                done();
+            });
+        });
+
+        it('Query index', function (done) {
+            dynamokv.listOnIndexKey("TableC", "TableCReverseIdx", obj.prop2, function (err, items) {
+                should.not.exist(err);
+                items.should.be.instanceof(Array).and.have.lengthOf(1);
+                done();
+            });
+        });
+
+        it('Query index 2', function (done) {
+            dynamokv.listOnIndexKey("TableC", "TableCReverseIdx2", obj.prop3,
+                                    function (err, items) {
+                should.not.exist(err);
+                items.should.be.instanceof(Array).and.have.lengthOf(1);
+                done();
+            });
+        });
+
     });
 
 

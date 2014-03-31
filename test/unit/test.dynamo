@@ -33,5 +33,62 @@
             "ReadCapacityUnits" : 10,
             "WriteCapacityUnits" : 5
         }
+    },
+
+    "TableC" : {
+        "TableName" : null,
+        "AttributeDefinitions": [
+            { "AttributeName": "prop1",
+              "AttributeType": "S" },
+            { "AttributeName": "prop2",
+              "AttributeType": "S" },
+            { "AttributeName": "prop3",
+              "AttributeType": "S" }
+        ],
+
+        "KeySchema": [
+            { "AttributeName": "prop1",
+              "KeyType" : "HASH" },
+            { "AttributeName": "prop2",
+              "KeyType" : "RANGE" }
+        ],
+
+        "GlobalSecondaryIndexes" : [{
+            "IndexName": "TableCReverseIdx",
+            "KeySchema": [
+                { "AttributeName": "prop2",
+                  "KeyType": "HASH" },
+                { "AttributeName": "prop1",
+                  "KeyType": "RANGE" }
+            ],
+            "Projection": {
+                "ProjectionType": "KEYS_ONLY"
+            },
+            "ProvisionedThroughput": {
+                "ReadCapacityUnits": 10,
+                "WriteCapacityUnits": 5
+            }
+          }, {
+            "IndexName": "TableCReverseIdx2",
+            "KeySchema": [
+                { "AttributeName": "prop3",
+                  "KeyType": "HASH" },
+                { "AttributeName": "prop1",
+                  "KeyType": "RANGE" }
+            ],
+            "Projection": {
+                "ProjectionType": "KEYS_ONLY"
+            },
+            "ProvisionedThroughput": {
+                "ReadCapacityUnits": 10,
+                "WriteCapacityUnits": 5
+            }
+          }
+        ],
+
+        "ProvisionedThroughput": {
+            "ReadCapacityUnits" : 10,
+            "WriteCapacityUnits" : 5
+        }
     }
 }
