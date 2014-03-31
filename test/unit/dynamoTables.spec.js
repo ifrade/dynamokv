@@ -41,6 +41,45 @@ var testTables = {
             "ReadCapacityUnits" : 10,
             "WriteCapacityUnits" : 5
         }
+    },
+
+
+    "C" : {
+        "TableName" : null,
+        "AttributeDefinitions": [
+            { "AttributeName": "id",
+              "AttributeType": "S" },
+            { "AttributeName": "itemType",
+              "AttributeType": "S" },
+            { "AttributeName": "itemColor",
+              "AttributeType": "S" }
+        ],
+        "KeySchema": [
+            { "AttributeName": "id",
+              "KeyType" : "HASH" },
+            { "AttributeName": "itemType",
+              "KeyType" : "RANGE" }
+        ],
+        "GlobalSecondaryIndexes" : [{
+            "IndexName": "CIndex",
+            "KeySchema": [
+                { "AttributeName": "itemColor",
+                  "KeyType": "HASH" },
+                { "AttributeName": "id",
+                  "KeyType": "RANGE" }
+            ],
+            "Projection": {
+                "ProjectionType": "KEYS_ONLY"
+            },
+            "ProvisionedThroughput": {
+                "ReadCapacityUnits": 10,
+                "WriteCapacityUnits": 5
+            }
+        }],
+        "ProvisionedThroughput": {
+            "ReadCapacityUnits" : 10,
+            "WriteCapacityUnits" : 5
+        }
     }
 };
 
@@ -130,6 +169,22 @@ describe("DynamoTables", function () {
             keyInObj.hash.S.should.equal("1");
             keyInObj.should.have.property("range");
             keyInObj.range.S.should.equal("2");
+        });
+    });
+
+    describe("Indexes", function () {
+        it("Get non-key fields", function () {
+            var result = tables.getOtherFieldsForTable("C");
+            should.exist(result);
+            result.should.be.instanceOf(Array).and.have.lengthOf(1);
+            result.indexOf("itemColor").should.equal(0);
+        });
+
+        it("Get keys for an index", function () {
+            var result = tables.getKeyFieldForIndex("C", "CIndex");
+            should.exist(result);
+            result.should.have.property("hashField", "itemColor");
+            result.should.have.property("rangeField", "id");
         });
     });
 
