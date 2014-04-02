@@ -10,17 +10,21 @@ var DynamoHelper = require('../../lib/DynamoHelper.js');
 var createDynamoKV = require('../../lib/DynamoKV.js').createDynamoKV;
 var tables = JSON.parse(fs.readFileSync(__dirname + "/test.dynamo").toString());
 
+var tableNames = {};
+Object.keys(tables).forEach(function (table) {
+    tableNames[table] = "funny-prefix-" + table + "-and-suffix";
+});
+
 describe("DynamoKV", function () {
     this.timeout(4000);
 
     var dynamo;
     var dynamokv;
-    var TABLE_PREFIX = "test-dynamokv";
 
     before(function (done) {
-        DynamoHelper.getFakeDynamo(TABLE_PREFIX, tables, function (err, dynamoInstance) {
+        DynamoHelper.getFakeDynamo(tableNames, tables, function (err, dynamoInstance) {
             dynamo = dynamoInstance;
-            dynamokv = createDynamoKV(TABLE_PREFIX, tables, function (err, dkv) {
+            createDynamoKV(tableNames, tables, function (err, dkv) {
                 dynamokv = dkv;
                 done();
             });
@@ -31,9 +35,9 @@ describe("DynamoKV", function () {
         dynamokv.listTables(function (err, tables) {
             should.exist(tables);
             tables.should.have.length(3);
-            tables.should.contain(TABLE_PREFIX + "-" + "TableA");
-            tables.should.contain(TABLE_PREFIX + "-" + "TableB");
-            tables.should.contain(TABLE_PREFIX + "-" + "TableC");
+            Object.keys(tableNames).forEach(function (shortTableName) {
+                tables.should.contain(tableNames[shortTableName]);
+            });
             done();
         });
     });

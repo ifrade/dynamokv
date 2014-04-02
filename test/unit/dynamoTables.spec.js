@@ -84,10 +84,15 @@ var testTables = {
 };
 
 
+var testTableNames = {
+    "A" : "prefix-A-123",
+    "B" : "prefix-B-234",
+    "C" : "test-12313-C-12312312",
+};
+
 describe("DynamoTables", function () {
 
-    var tablesInDB = ["prefix-A-123", "prefix-B-234"];
-    var tables = new DynamoTables(tablesInDB, "prefix", testTables);
+    var tables = new DynamoTables(testTableNames, testTables);
 
     it("Full name correctly resolved", function () {
         var fullName = tables.fullTableName("A");
@@ -112,7 +117,7 @@ describe("DynamoTables", function () {
     });
 
     it("Short name of a non-existing table name", function () {
-        (function () { var shortName = tables.shortTableName("ha-ha-ha"); }).should.throwError();
+        should.not.exist(tables.shortTableName("ha-ha-ha"));
     });
 
     describe("Only hash key", function () {
@@ -163,7 +168,7 @@ describe("DynamoTables", function () {
                 "a": { "S": "bla" },
                 "b": { "S": "ble"}
             };
-            var keyInObj = tables.getKeyForItem(dynamoObj, "prefix-B-123");
+            var keyInObj = tables.getKeyForItem(dynamoObj, "prefix-B-234");
             should.exist(keyInObj);
             keyInObj.should.have.property("hash");
             keyInObj.hash.S.should.equal("1");
